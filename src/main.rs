@@ -1,9 +1,11 @@
 mod chunk;
 mod opcode;
 mod tokenizer;
+mod vm;
 
 use chunk::Chunk;
 use opcode::Opcode;
+use vm::Vm;
 
 fn main() {
     let mut chunk = Chunk::default();
@@ -12,6 +14,11 @@ fn main() {
     chunk.write(constant, 123);
     chunk.write(Opcode::Return as u8, 123);
     chunk.disassemble("test chunk");
+
+    let mut vm = Vm::default();
+    if let Err(e) = vm.interpret(chunk) {
+        eprintln!("Error:\n{e:?}");
+    }
 }
 
 #[derive(Debug)]

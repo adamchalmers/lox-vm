@@ -3,7 +3,7 @@ use crate::{
     Value,
 };
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct Chunk {
     pub code: Vec<u8>,
     pub constants: Vec<Value>,
@@ -33,7 +33,7 @@ impl Chunk {
         }
     }
 
-    fn disassemble_instruction(&self, offset: usize) -> usize {
+    pub fn disassemble_instruction(&self, offset: usize) -> usize {
         print!("{offset:04} ");
 
         // Print the line information.
@@ -46,8 +46,8 @@ impl Chunk {
         match Opcode::try_from(self.code[offset]) {
             Ok(Opcode::Return) => simple_instruction("OP_RETURN", offset),
             Ok(Opcode::Constant) => self.constant_instruction("OP_CONSTANT", offset),
-            Err(CouldNotDecodeOpcode(x)) => {
-                println!("Unknown opcode {x}");
+            Err(CouldNotDecodeOpcode { opcode }) => {
+                println!("Unknown opcode {opcode}");
                 offset + 1
             }
         }

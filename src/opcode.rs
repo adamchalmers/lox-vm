@@ -14,15 +14,18 @@ impl From<Opcode> for u8 {
 impl TryFrom<u8> for Opcode {
     type Error = CouldNotDecodeOpcode;
 
-    fn try_from(value: u8) -> Result<Self, Self::Error> {
-        let opcode = match value {
+    fn try_from(opcode: u8) -> Result<Self, Self::Error> {
+        let opcode = match opcode {
             0 => Self::Constant,
             1 => Self::Return,
-            _ => return Err(CouldNotDecodeOpcode(value)),
+            _ => return Err(CouldNotDecodeOpcode { opcode }),
         };
         Ok(opcode)
     }
 }
 
-#[derive(Debug)]
-pub struct CouldNotDecodeOpcode(pub u8);
+#[derive(Debug, thiserror::Error)]
+#[error("Could not decode opcode '{opcode}'")]
+pub struct CouldNotDecodeOpcode {
+    pub opcode: u8,
+}
