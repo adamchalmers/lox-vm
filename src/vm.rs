@@ -9,9 +9,14 @@ pub struct Vm {
     chunk: Chunk,
     /// Instruction pointer
     ip: usize,
+    stack: Vec<Value>,
 }
 
 impl Vm {
+    pub fn init(&mut self) {
+        self.stack.clear();
+    }
+
     pub fn interpret(&mut self, chunk: Chunk) -> Result<(), Error> {
         self.chunk = chunk;
         self.ip = 0;
@@ -21,14 +26,26 @@ impl Vm {
     fn run(&mut self) -> Result<(), Error> {
         loop {
             if cfg!(feature = "trace") {
+                print!("          ");
+                for slot in &self.stack {
+                    print!("[");
+                    slot.print();
+                    print!("]");
+                }
+                println!();
                 self.chunk.disassemble_instruction(self.ip);
             }
-            match Opcode::try_from(self.chunk.code[self.ip]) {
-                Ok(Opcode::Return) => return Ok(()),
-                Ok(Opcode::Constant) => {
-                    let constant = self.read_constant();
-                    constant.print();
+            let instruction = self.read_byte();
+            match Opcode::try_from(instruction) {
+                Ok(Opcode::Return) => {
+                    let val = self.stack.pop().ok_or(RuntimeErr::StackEmpty)?;
+                    val.print();
                     println!();
+                    return Ok(());
+                }
+                Ok(Opcode::Constant) => {
+                    let constant = self.read_constant().clone();
+                    self.stack.push(constant);
                 }
                 Err(e) => return Err(RuntimeErr::from(e).into()),
             }
@@ -60,4 +77,6 @@ pub enum Error {
 pub enum RuntimeErr {
     #[error("{0}")]
     CouldNotDecodeOpcode(#[from] CouldNotDecodeOpcode),
+    #[error("tried to read from the stack, but it was empty")]
+    StackEmpty,
 }

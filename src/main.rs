@@ -16,12 +16,13 @@ fn main() {
     chunk.disassemble("test chunk");
 
     let mut vm = Vm::default();
+    vm.init();
     if let Err(e) = vm.interpret(chunk) {
         eprintln!("Error:\n{e:?}");
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 struct Value(f64);
 
 impl From<f64> for Value {

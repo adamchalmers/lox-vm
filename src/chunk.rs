@@ -25,6 +25,7 @@ impl Chunk {
         (self.constants.len() - 1) as u8
     }
 
+    #[allow(dead_code)]
     pub fn disassemble(&self, name: &str) {
         println!("== {name} ==");
         let mut offset = 0usize;
