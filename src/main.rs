@@ -12,6 +12,7 @@ fn main() {
     let constant = chunk.add_constant(Value::from(1.2));
     chunk.write(Opcode::Constant as u8, 123);
     chunk.write(constant, 123);
+    chunk.write(Opcode::Negate as u8, 123);
     chunk.write(Opcode::Return as u8, 123);
     chunk.disassemble("test chunk");
 

@@ -43,6 +43,11 @@ impl Vm {
                     println!();
                     return Ok(());
                 }
+                Ok(Opcode::Negate) => {
+                    let x = self.stack.pop().unwrap();
+                    let x = Value::from(-x.0);
+                    self.stack.push(x);
+                }
                 Ok(Opcode::Constant) => {
                     let constant = self.read_constant().clone();
                     self.stack.push(constant);
