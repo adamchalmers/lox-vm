@@ -4,6 +4,10 @@ pub enum Opcode {
     Constant,
     Negate,
     Return,
+    Add,
+    Sub,
+    Mul,
+    Div,
 }
 
 impl From<Opcode> for u8 {
@@ -20,6 +24,10 @@ impl TryFrom<u8> for Opcode {
             0 => Self::Constant,
             1 => Self::Negate,
             2 => Self::Return,
+            3 => Self::Add,
+            4 => Self::Sub,
+            5 => Self::Mul,
+            6 => Self::Div,
             _ => return Err(CouldNotDecodeOpcode { opcode }),
         };
         Ok(opcode)

@@ -47,6 +47,10 @@ impl Chunk {
         match Opcode::try_from(self.code[offset]) {
             Ok(Opcode::Return) => simple_instruction("OP_RETURN", offset),
             Ok(Opcode::Negate) => simple_instruction("OP_NEGATE", offset),
+            Ok(Opcode::Add) => simple_instruction("OP_ADD", offset),
+            Ok(Opcode::Sub) => simple_instruction("OP_SUBTRACT", offset),
+            Ok(Opcode::Mul) => simple_instruction("OP_MULTIPLY", offset),
+            Ok(Opcode::Div) => simple_instruction("OP_DIVIDE", offset),
             Ok(Opcode::Constant) => self.constant_instruction("OP_CONSTANT", offset),
             Err(CouldNotDecodeOpcode { opcode }) => {
                 println!("Unknown opcode {opcode}");

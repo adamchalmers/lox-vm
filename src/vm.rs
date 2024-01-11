@@ -38,7 +38,7 @@ impl Vm {
             let instruction = self.read_byte();
             match Opcode::try_from(instruction) {
                 Ok(Opcode::Return) => {
-                    let val = self.stack.pop().ok_or(RuntimeErr::StackEmpty)?;
+                    let val = self.pop()?;
                     val.print();
                     println!();
                     return Ok(());
@@ -52,9 +52,43 @@ impl Vm {
                     let constant = self.read_constant().clone();
                     self.stack.push(constant);
                 }
+                Ok(Opcode::Add) => {
+                    let (a, b) = self.pop_two()?;
+                    self.do_then_push(a, b, std::ops::Add::add)
+                }
+                Ok(Opcode::Sub) => {
+                    let (a, b) = self.pop_two()?;
+                    self.do_then_push(a, b, std::ops::Sub::sub)
+                }
+                Ok(Opcode::Mul) => {
+                    let (a, b) = self.pop_two()?;
+                    self.do_then_push(a, b, std::ops::Mul::mul)
+                }
+                Ok(Opcode::Div) => {
+                    let (a, b) = self.pop_two()?;
+                    self.do_then_push(a, b, std::ops::Div::div)
+                }
                 Err(e) => return Err(RuntimeErr::from(e).into()),
             }
         }
+    }
+
+    fn do_then_push<Op>(&mut self, a: Value, b: Value, op: Op)
+    where
+        Op: Fn(Value, Value) -> Value,
+    {
+        self.stack.push(op(a, b));
+    }
+
+    fn pop(&mut self) -> Result<Value, CompileErr> {
+        let val = self.stack.pop().ok_or(CompileErr::StackEmpty)?;
+        Ok(val.clone())
+    }
+
+    fn pop_two(&mut self) -> Result<(Value, Value), CompileErr> {
+        let b = self.pop()?;
+        let a = self.pop()?;
+        Ok((a, b))
     }
 
     fn read_constant(&mut self) -> &Value {
@@ -72,16 +106,20 @@ impl Vm {
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
     #[allow(dead_code)]
-    #[error("Compile error")]
-    Compile,
+    #[error("Compile error: {0}")]
+    Compile(#[from] CompileErr),
     #[error("Runtime error: {0}")]
     Runtime(#[from] RuntimeErr),
+}
+
+#[derive(Debug, thiserror::Error)]
+pub enum CompileErr {
+    #[error("tried to read from the stack, but it was empty")]
+    StackEmpty,
 }
 
 #[derive(Debug, thiserror::Error)]
 pub enum RuntimeErr {
     #[error("{0}")]
     CouldNotDecodeOpcode(#[from] CouldNotDecodeOpcode),
-    #[error("tried to read from the stack, but it was empty")]
-    StackEmpty,
 }
