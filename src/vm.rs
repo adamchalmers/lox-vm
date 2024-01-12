@@ -1,5 +1,6 @@
 use crate::{
     chunk::Chunk,
+    compiler::compile,
     opcode::{CouldNotDecodeOpcode, Opcode},
     value::Value,
 };
@@ -27,9 +28,11 @@ impl Vm {
         slf
     }
 
-    pub fn interpret(&mut self, chunk: Chunk) -> Result<(), Error> {
+    pub fn interpret(&mut self, source: &str) -> Result<(), Error> {
+        let chunk = Chunk::default();
         self.chunk = chunk;
         self.ip = 0;
+        compile(source, &mut self.chunk)?;
         self.run()
     }
 
@@ -126,6 +129,10 @@ pub enum Error {
 pub enum CompileErr {
     #[error("tried to read from the stack, but it was empty")]
     StackEmpty,
+    #[error("unexpected or invalid token in your source code at line {line}")]
+    BadToken { line: usize },
+    #[error("error at line {line}: {msg}")]
+    Other { line: usize, msg: &'static str },
 }
 
 #[derive(Debug, thiserror::Error)]

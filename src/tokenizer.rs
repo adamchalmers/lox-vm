@@ -4,7 +4,7 @@ pub struct Scanner<'src> {
     start: usize, // beginning of the current lexeme being scanned
     current: usize,
     src: &'src str,
-    line: usize,
+    pub line: usize,
 }
 impl<'src> Scanner<'src> {
     pub fn new(source: &str) -> Scanner {

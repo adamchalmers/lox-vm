@@ -42,17 +42,12 @@ enum Error {
     Io(#[from] std::io::Error),
 }
 
-fn interpret(line: &str, vm: &mut Vm) -> Result<(), vm::Error> {
-    compiler::compile(line);
-    Ok(())
-}
-
 fn repl() -> Result<(), Error> {
     let mut lines = std::io::stdin().lines();
     let mut vm = Vm::new();
     print!("> ");
     while let Some(line) = lines.next() {
-        interpret(&line?, &mut vm)?;
+        vm.interpret(&line?)?;
         print!("> ");
     }
     Ok(())
@@ -62,7 +57,7 @@ fn run_file(filepath: String) -> Result<(), Error> {
     let f = std::fs::read_to_string(filepath)?;
     let mut vm = Vm::new();
     for line in f.lines() {
-        interpret(&line, &mut vm)?;
+        vm.interpret(&line)?;
     }
     Ok(())
 }
