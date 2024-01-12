@@ -1,6 +1,6 @@
 use crate::{
     opcode::{CouldNotDecodeOpcode, Opcode},
-    Value,
+    value::Value,
 };
 
 #[derive(Default, Debug)]

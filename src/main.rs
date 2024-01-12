@@ -1,84 +1,68 @@
 mod chunk;
+mod compiler;
 mod opcode;
 mod tokenizer;
+mod value;
 mod vm;
 
-use chunk::Chunk;
-use opcode::Opcode;
+use std::process::exit;
+
 use vm::Vm;
 
 fn main() {
-    let mut chunk = Chunk::default();
-    let constant = chunk.add_constant(Value::from(1.2));
-    chunk.write(Opcode::Constant as u8, 123);
-    chunk.write(constant, 123);
-
-    let constant = chunk.add_constant(Value::from(3.4));
-    chunk.write(Opcode::Constant as u8, 123);
-    chunk.write(constant, 123);
-
-    chunk.write(Opcode::Add as u8, 123);
-
-    let constant = chunk.add_constant(Value::from(5.6));
-    chunk.write(Opcode::Constant as u8, 123);
-    chunk.write(constant, 123);
-
-    chunk.write(Opcode::Div as u8, 123);
-
-    chunk.write(Opcode::Negate as u8, 123);
-    chunk.write(Opcode::Return as u8, 123);
-    chunk.disassemble("test chunk");
-
-    let mut vm = Vm::default();
-    vm.init();
-    if let Err(e) = vm.interpret(chunk) {
-        eprintln!("Error:\n{e:?}");
+    let mut args = std::env::args();
+    let _ = args.next();
+    let res = if let Some(filepath) = args.next() {
+        run_file(filepath)
+    } else {
+        repl()
+    };
+    match res {
+        Ok(()) => {}
+        Err(Error::Io(err)) => {
+            eprintln!("{err}");
+            exit(1);
+        }
+        Err(Error::Vm(vm::Error::Runtime(err))) => {
+            eprintln!("{err}");
+            exit(2);
+        }
+        Err(Error::Vm(vm::Error::Compile(err))) => {
+            eprintln!("{err}");
+            exit(3);
+        }
     }
 }
 
-#[derive(Debug, Clone)]
-struct Value(f64);
-
-impl From<f64> for Value {
-    fn from(value: f64) -> Self {
-        Self(value)
-    }
+#[derive(Debug, thiserror::Error)]
+enum Error {
+    #[error("The lox VM returned an error: {0}")]
+    Vm(#[from] vm::Error),
+    #[error("IO error: {0}")]
+    Io(#[from] std::io::Error),
 }
 
-impl Value {
-    fn print(&self) {
-        print!("'{}'", self.0);
-    }
+fn interpret(line: &str, vm: &mut Vm) -> Result<(), vm::Error> {
+    compiler::compile(line);
+    Ok(())
 }
 
-impl std::ops::Sub for Value {
-    type Output = Self;
-
-    fn sub(self, rhs: Self) -> Self::Output {
-        Self(self.0.sub(rhs.0))
+fn repl() -> Result<(), Error> {
+    let mut lines = std::io::stdin().lines();
+    let mut vm = Vm::new();
+    print!("> ");
+    while let Some(line) = lines.next() {
+        interpret(&line?, &mut vm)?;
+        print!("> ");
     }
+    Ok(())
 }
 
-impl std::ops::Mul for Value {
-    type Output = Self;
-
-    fn mul(self, rhs: Self) -> Self::Output {
-        Self(self.0.mul(rhs.0))
+fn run_file(filepath: String) -> Result<(), Error> {
+    let f = std::fs::read_to_string(filepath)?;
+    let mut vm = Vm::new();
+    for line in f.lines() {
+        interpret(&line, &mut vm)?;
     }
-}
-
-impl std::ops::Div for Value {
-    type Output = Self;
-
-    fn div(self, rhs: Self) -> Self::Output {
-        Self(self.0.div(rhs.0))
-    }
-}
-
-impl std::ops::Add for Value {
-    type Output = Self;
-
-    fn add(self, rhs: Self) -> Self::Output {
-        Self(self.0.add(rhs.0))
-    }
+    Ok(())
 }

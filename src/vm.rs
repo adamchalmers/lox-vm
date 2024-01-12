@@ -1,10 +1,10 @@
 use crate::{
     chunk::Chunk,
     opcode::{CouldNotDecodeOpcode, Opcode},
-    Value,
+    value::Value,
 };
 
-#[derive(Debug, Default)]
+#[derive(Debug)]
 pub struct Vm {
     chunk: Chunk,
     /// Instruction pointer
@@ -15,6 +15,16 @@ pub struct Vm {
 impl Vm {
     pub fn init(&mut self) {
         self.stack.clear();
+    }
+
+    pub fn new() -> Self {
+        let mut slf = Self {
+            chunk: Default::default(),
+            ip: Default::default(),
+            stack: Default::default(),
+        };
+        slf.init();
+        slf
     }
 
     pub fn interpret(&mut self, chunk: Chunk) -> Result<(), Error> {
